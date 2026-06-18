@@ -119,8 +119,10 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
+import android.hardware.power.Boost;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManagerInternal;
 import android.os.SystemClock;
 import android.os.Trace;
 import android.os.UserHandle;
@@ -249,6 +251,7 @@ import com.android.launcher3.widget.WidgetVisibilityTracker;
 import com.android.launcher3.widget.custom.CustomWidgetManager;
 import com.android.launcher3.widget.picker.model.WidgetPickerDataProvider;
 import com.android.launcher3.widget.util.WidgetSizeHandler;
+import com.android.server.LocalServices;
 import com.android.systemui.plugins.shared.LauncherOverlayManager;
 import com.android.systemui.plugins.shared.LauncherOverlayManager.LauncherOverlayTouchProxy;
 
@@ -1109,8 +1112,16 @@ public class Launcher extends StatefulActivity<LauncherState>
         return Optional.of(LAUNCHER_ALLAPPS_EXIT);
     }
 
+    private void boostInteraction(int durationMs) {
+        PowerManagerInternal pmi = LocalServices.getService(PowerManagerInternal.class);
+        if (pmi != null) {
+            pmi.setPowerBoost(Boost.INTERACTION, durationMs);
+        }
+    }
+
     @Override
     protected void onResume() {
+        boostInteraction(800);
         TraceHelper.INSTANCE.beginSection(ON_RESUME_EVT);
         super.onResume();
         mLauncherUiState.setIsResumedActivity(true);
@@ -1120,6 +1131,7 @@ public class Launcher extends StatefulActivity<LauncherState>
 
     @Override
     protected void onPause() {
+        boostInteraction(10);
         // Ensure that items added to Launcher are queued until Launcher returns
         ItemInstallQueue.INSTANCE.get(this).pauseModelPush(FLAG_ACTIVITY_PAUSED);
 

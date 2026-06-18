@@ -84,10 +84,12 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.hardware.power.Boost;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.IRemoteCallback;
 import android.os.Looper;
+import android.os.PowerManagerInternal;
 import android.os.RemoteException;
 import android.os.SystemProperties;
 import android.os.UserHandle;
@@ -169,6 +171,7 @@ import com.android.quickstep.util.TaskRestartedDuringLaunchListener;
 import com.android.quickstep.util.WorkspaceRevealAnim;
 import com.android.quickstep.views.FloatingWidgetView;
 import com.android.quickstep.views.RecentsView;
+import com.android.server.LocalServices;
 import com.android.systemui.animation.RemoteAnimationRunnerCompat;
 import com.android.systemui.animation.RemoteTransitionPickerDelegate;
 import com.android.systemui.shared.system.BlurUtils;
@@ -370,6 +373,13 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                 R.dimen.max_depth_blur_radius_enhanced);
         mIsAppLaunchBlurEnabled = appLaunchBlur() && res.getBoolean(
                 com.android.internal.R.bool.config_enableAppLaunchBlur);
+    }
+
+    private void boostInteraction(int durationMs) {
+        PowerManagerInternal pmi = LocalServices.getService(PowerManagerInternal.class);
+        if (pmi != null) {
+            pmi.setPowerBoost(Boost.INTERACTION, durationMs);
+        }
     }
 
     @Override
@@ -1841,6 +1851,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             @Override
             public void onAnimationStart(Animator animation) {
                 anim.start(mLauncher, mDeviceProfile, velocityPxPerS);
+                boostInteraction(700);
             }
         });
         return anim;
@@ -1965,12 +1976,14 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                             }
                         });
                 super.onAnimationStart(animation);
+                boostInteraction(700);
             }
 
             @Override
             public void onAnimationCancel(Animator animation) {
                 super.onAnimationCancel(animation);
                 InteractionJankMonitorWrapper.cancel(cuj);
+                boostInteraction(10);
             }
 
             @Override

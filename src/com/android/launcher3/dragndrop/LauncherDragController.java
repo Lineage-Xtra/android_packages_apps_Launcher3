@@ -23,6 +23,8 @@ import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import android.content.res.Resources;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.hardware.power.Boost;
+import android.os.PowerManagerInternal;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.View;
@@ -34,6 +36,7 @@ import com.android.launcher3.Launcher;
 import com.android.launcher3.R;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.widget.util.WidgetDragScaleUtils;
+import com.android.server.LocalServices;
 
 import java.util.function.Consumer;
 
@@ -53,6 +56,13 @@ public class LauncherDragController extends DragController {
         mLauncher = launcher;
     }
 
+    private void boostInteraction(int durationMs) {
+        PowerManagerInternal pmi = LocalServices.getService(PowerManagerInternal.class);
+        if (pmi != null) {
+            pmi.setPowerBoost(Boost.INTERACTION, durationMs);
+        }
+    }
+
     @Override
     protected Consumer<MotionEvent> getSecondaryEventConsumer() {
         return mFlingToDeleteHelper::recordMotionEvent;
@@ -63,6 +73,9 @@ public class LauncherDragController extends DragController {
             DraggableView originalView, ItemInfo dragInfo, int dragLayerX, int dragLayerY,
             Rect dragRegion, float initialDragViewScale, float dragViewScaleOnDrop,
             boolean allowSpringDrawable) {
+
+        boostInteraction(700);
+
         final int registrationX = mMotionDown.x - dragLayerX;
         final int registrationY = mMotionDown.y - dragLayerY;
 

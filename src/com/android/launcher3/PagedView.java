@@ -35,7 +35,9 @@ import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.hardware.power.Boost;
 import android.os.Bundle;
+import android.os.PowerManagerInternal;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.InputDevice;
@@ -63,6 +65,7 @@ import com.android.launcher3.util.EdgeEffectCompat;
 import com.android.launcher3.util.IntSet;
 import com.android.launcher3.util.Thunk;
 import com.android.launcher3.views.ActivityContext;
+import com.android.server.LocalServices;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -194,6 +197,13 @@ public abstract class PagedView<T extends View & PageIndicator> extends ViewGrou
         initEdgeEffect();
         setDefaultFocusHighlightEnabled(false);
         setWillNotDraw(false);
+    }
+
+    private void boostInteraction(int durationMs) {
+        PowerManagerInternal pmi = LocalServices.getService(PowerManagerInternal.class);
+        if (pmi != null) {
+            pmi.setPowerBoost(Boost.INTERACTION, durationMs);
+        }
     }
 
     protected void initEdgeEffect() {
@@ -1723,6 +1733,7 @@ public abstract class PagedView<T extends View & PageIndicator> extends ViewGrou
     }
 
     protected boolean snapToPageWithVelocity(int whichPage, int velocity) {
+        boostInteraction(400);
         whichPage = validateNewPage(whichPage);
         int halfScreenSize = mOrientationHandler.getMeasuredSize(this) / 2;
 

@@ -74,7 +74,7 @@ public class LauncherDragController extends DragController {
             Rect dragRegion, float initialDragViewScale, float dragViewScaleOnDrop,
             boolean allowSpringDrawable) {
 
-        boostInteraction(700);
+        boostInteraction(500);
 
         final int registrationX = mMotionDown.x - dragLayerX;
         final int registrationY = mMotionDown.y - dragLayerY;

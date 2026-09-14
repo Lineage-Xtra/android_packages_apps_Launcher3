@@ -1223,6 +1223,9 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
      */
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
+        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+            boostInteraction(60);
+        }
         if (isTrackpadMultiFingerSwipe(ev)) {
             return false;
         }

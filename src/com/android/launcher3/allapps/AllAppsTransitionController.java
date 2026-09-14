@@ -36,6 +36,8 @@ import static com.android.launcher3.util.SystemUiController.UI_STATE_ALL_APPS;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
+import android.hardware.power.Boost;
+import android.os.PowerManagerInternal;
 import android.util.FloatProperty;
 import android.util.Log;
 import android.view.HapticFeedbackConstants;
@@ -63,6 +65,7 @@ import com.android.launcher3.util.MultiValueAlpha;
 import com.android.launcher3.util.ScrollableLayoutManager;
 import com.android.launcher3.util.Themes;
 import com.android.launcher3.views.ScrimView;
+import com.android.server.LocalServices;
 
 import com.google.android.msdl.data.model.MSDLToken;
 
@@ -142,6 +145,13 @@ public class AllAppsTransitionController
         mAllAppScale.value = 1;
         mLauncher.addOnDeviceProfileChangeListener(this);
         mMSDLPlayerWrapper = MSDLPlayerWrapper.INSTANCE.get(mLauncher.getApplicationContext());
+    }
+
+    private void boostInteraction(int durationMs) {
+        PowerManagerInternal pmi = LocalServices.getService(PowerManagerInternal.class);
+        if (pmi != null) {
+            pmi.setPowerBoost(Boost.INTERACTION, durationMs);
+        }
     }
 
     public float getShiftRange() {
@@ -301,6 +311,8 @@ public class AllAppsTransitionController
     @Override
     public void setStateWithAnimation(LauncherState toState,
             StateAnimationConfig config, PendingAnimation builder) {
+        boostInteraction(500);
+
         if (mLauncher.isInState(ALL_APPS) && !ALL_APPS.equals(toState)) {
             // Reset scale after switching states.
             builder.addEndListener(success -> mAllAppScale.updateValue(1f));

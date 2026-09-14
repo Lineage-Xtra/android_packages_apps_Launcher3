@@ -26,7 +26,9 @@ import static com.android.launcher3.compat.AccessibilityManagerCompat.sendCustom
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.hardware.power.Boost;
 import android.os.Build;
+import android.os.PowerManagerInternal;
 import android.util.AttributeSet;
 import android.util.Pair;
 import android.view.MotionEvent;
@@ -42,6 +44,7 @@ import com.android.launcher3.anim.PendingAnimation;
 import com.android.launcher3.util.TouchController;
 import com.android.launcher3.views.ActivityContext;
 import com.android.launcher3.views.BaseDragLayer;
+import com.android.server.LocalServices;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -157,6 +160,13 @@ public abstract class AbstractFloatingView extends LinearLayout implements Touch
         super(context, attrs, defStyleAttr);
     }
 
+    private static void boostInteraction(int durationMs) {
+        PowerManagerInternal pmi = LocalServices.getService(PowerManagerInternal.class);
+        if (pmi != null) {
+            pmi.setPowerBoost(Boost.INTERACTION, durationMs);
+        }
+    }
+
     /**
      * We need to handle touch events to prevent them from falling through to the workspace below.
      */
@@ -167,6 +177,7 @@ public abstract class AbstractFloatingView extends LinearLayout implements Touch
     }
 
     public final void close(boolean animate) {
+        boostInteraction(400);
         animate &= areAnimatorsEnabled();
         if (mIsOpen) {
             // Add to WW logging

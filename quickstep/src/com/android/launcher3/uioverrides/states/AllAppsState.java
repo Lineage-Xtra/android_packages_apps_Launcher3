@@ -15,6 +15,7 @@
  */
 package com.android.launcher3.uioverrides.states;
 
+import static com.android.app.animation.Interpolators.DECELERATE;
 import static com.android.launcher3.Utilities.shouldReduceWorkspaceBlurUsage;
 import static com.android.launcher3.logging.StatsLogManager.LAUNCHER_STATE_ALLAPPS;
 
@@ -131,14 +132,26 @@ public class AllAppsState extends LauncherState {
 
     @Override
     public boolean shouldBlurWorkspace(Launcher launcher, LauncherState targetState) {
-        return !shouldReduceWorkspaceBlurUsage(launcher) && (targetState == ALL_APPS
-                || targetState == NORMAL);
+        return false;
+    }
+
+    @Override
+    public PageAlphaProvider getWorkspacePageAlphaProvider(Launcher launcher) {
+        PageAlphaProvider superPageAlphaProvider = super.getWorkspacePageAlphaProvider(launcher);
+        return new PageAlphaProvider(DECELERATE) {
+            @Override
+            public float getPageAlpha(int pageIndex) {
+                return launcher.getDeviceProfile().getDeviceProperties().isLargeScreen()
+                        ? superPageAlphaProvider.getPageAlpha(pageIndex)
+                        : 0f;
+            }
+        };
     }
 
     @Override
     public int getVisibleElements(LauncherUiState launcherUiState) {
-        return Flags.allAppsSurface() ? HOTSEAT_ICONS
-                : ALL_APPS_CONTENT | FLOATING_SEARCH_BAR | HOTSEAT_ICONS;
+        return Flags.allAppsSurface() ? 0
+                : ALL_APPS_CONTENT | FLOATING_SEARCH_BAR;
     }
 
     @Override

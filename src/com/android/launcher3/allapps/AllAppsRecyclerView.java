@@ -108,8 +108,11 @@ public class AllAppsRecyclerView extends FastScrollRecyclerView {
 
     protected void updatePoolSize() {
         RecyclerView.RecycledViewPool pool = getRecycledViewPool();
+        pool.setMaxRecycledViews(BaseAllAppsAdapter.VIEW_TYPE_ICON, 20);
+        pool.setMaxRecycledViews(BaseAllAppsAdapter.VIEW_TYPE_PRIVATE_SPACE_APP_ICON, 20);
         pool.setMaxRecycledViews(AllAppsGridAdapter.VIEW_TYPE_EMPTY_SEARCH, 1);
         pool.setMaxRecycledViews(AllAppsGridAdapter.VIEW_TYPE_ALL_APPS_DIVIDER, 1);
+        setItemViewCacheSize(10);
     }
 
     @Override

@@ -30,6 +30,7 @@ import static com.android.launcher3.LauncherAnimUtils.VIEW_TRANSLATE_Y;
 import static com.android.launcher3.LauncherAnimUtils.WORKSPACE_SCALE_PROPERTY_FACTORY;
 import static com.android.launcher3.LauncherState.FLAG_HAS_SYS_UI_SCRIM;
 import static com.android.launcher3.LauncherState.FLAG_HOTSEAT_INACCESSIBLE;
+import static com.android.launcher3.LauncherState.FLAG_WORKSPACE_INACCESSIBLE;
 import static com.android.launcher3.LauncherState.HINT_STATE;
 import static com.android.launcher3.LauncherState.HOTSEAT_ICONS;
 import static com.android.launcher3.LauncherState.NORMAL;
@@ -153,6 +154,8 @@ public class WorkspaceStateTransitionAnimation {
 
         Interpolator workspaceFadeInterpolator = config.getInterpolator(ANIM_WORKSPACE_FADE,
                 pageAlphaProvider.interpolator);
+        float workspaceAlpha = state.hasFlag(FLAG_WORKSPACE_INACCESSIBLE) ? 0f : 1f;
+        propertySetter.setViewAlpha(mWorkspace, workspaceAlpha, workspaceFadeInterpolator);
         float workspacePageIndicatorAlpha = (elements & WORKSPACE_PAGE_INDICATOR) != 0 ? 1 : 0;
         propertySetter.setViewAlpha(mLauncher.getWorkspace().getPageIndicator(),
                 workspacePageIndicatorAlpha, workspaceFadeInterpolator);

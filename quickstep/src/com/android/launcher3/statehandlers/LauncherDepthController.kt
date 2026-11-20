@@ -22,6 +22,7 @@ import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.android.launcher3.Flags
 import com.android.launcher3.LauncherState
+import com.android.launcher3.Utilities
 import com.android.launcher3.uioverrides.QuickstepLauncher
 import com.android.launcher3.util.ListenableRef
 
@@ -40,36 +41,36 @@ class LauncherDepthController(
         blurWorkspaceDepthTargets()
     }
 
+    private var lastAppliedEffectRadius = -1
+
     /** Returns `true` if the workspace should be blurred. This return value is only for tests. */
     @VisibleForTesting
     fun blurWorkspaceDepthTargets(): Boolean {
-        if (Flags.allAppsSurface()) {
-            // AllApps is in a separate layer, so we use background blur and don't blur views.
-            return false
-        }
         val stateManager = launcher.stateManager
         val targetState = stateManager.targetState ?: stateManager.state
+        if (Flags.allAppsSurface() || targetState == LauncherState.ALL_APPS || stateManager.state == LauncherState.ALL_APPS) {
+            // In AllApps, the workspace fades out; rely on SurfaceFlinger wallpaper blur and don't blur views
+            launcher.depthBlurTargets.forEach { it.setRenderEffect(null) }
+            return false
+        }
         // Only blur workspace if the current state wants to blur based on the target state.
         val shouldBlurWorkspace =
             stateManager.currentStableState.shouldBlurWorkspace(launcher, targetState)
 
-        val blurEffect =
-            if (shouldBlurWorkspace && mCurrentBlur > 0)
-                RenderEffect.createBlurEffect(
-                    mCurrentBlur.toFloat(),
-                    mCurrentBlur.toFloat(),
-                    Shader.TileMode.DECAL,
-                ) // If blur is not desired, clear the blur effect from the depth targets.
-            else null
-        Log.d(
-            TAG,
-            "shouldBlurWorkspace: $shouldBlurWorkspace" +
-                " targetState: $targetState" +
-                " currentStableState: ${stateManager.currentStableState}" +
-                " mCurrentBlur: $mCurrentBlur" +
-                " mLauncher.getDepthBlurTargets(): ${launcher.depthBlurTargets}",
-        )
-        launcher.depthBlurTargets.forEach { it.setRenderEffect(blurEffect) }
+        val maxViewBlurPx = Utilities.dpToPx(8f, launcher)
+        val targetRadius = if (shouldBlurWorkspace && mCurrentBlur > 0) minOf(mCurrentBlur, maxViewBlurPx) else 0
+        if (targetRadius != lastAppliedEffectRadius) {
+            lastAppliedEffectRadius = targetRadius
+            val blurEffect =
+                if (targetRadius > 0)
+                    RenderEffect.createBlurEffect(
+                        targetRadius.toFloat(),
+                        targetRadius.toFloat(),
+                        Shader.TileMode.DECAL,
+                    )
+                else null
+            launcher.depthBlurTargets.forEach { it.setRenderEffect(blurEffect) }
+        }
         return shouldBlurWorkspace
     }
 }
